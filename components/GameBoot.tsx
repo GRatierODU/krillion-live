@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { loadPrompts } from "@/lib/data";
 import type { Prompt } from "@/lib/types";
+import { useVisualViewport } from "@/lib/viewport";
 import { GameErrorBoundary } from "./GameErrorBoundary";
 
 function BootShell() {
@@ -79,6 +80,7 @@ function CatalogGate() {
 }
 
 export function GameBoot() {
+  useVisualViewport();
   return (
     <GameErrorBoundary>
       <CatalogGate />
