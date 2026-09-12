@@ -1,8 +1,9 @@
-export const DIVE_MS = 1200;
+export const DIVE_MS = 1700;
 
+/** One continuous 1–2s sink after a valid answer. */
 export function diveDuration(delta: number): number {
   const abs = Math.abs(delta);
-  return Math.min(1500, Math.max(850, 780 + abs * 0.35));
+  return Math.min(2000, Math.max(1500, 1480 + abs * 0.5));
 }
 
 export function prefersReducedMotion(): boolean {

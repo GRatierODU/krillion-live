@@ -12,6 +12,8 @@ const TIER: Record<string, TierId> = {
 type CompactAnswer = [string, string] | [string, string, string[]];
 export type CompactPrompt = [string, string, string, CompactAnswer[]];
 
+type Manifest = { parts: string[] };
+
 export const BANK_URLS = [
   "/bank.json",
   "/api/catalog",
@@ -32,6 +34,43 @@ export function inflate(rows: CompactPrompt[]): Prompt[] {
   }));
 }
 
+function isPromptArray(data: unknown): data is CompactPrompt[] {
+  return Array.isArray(data) && data.length > 0 && Array.isArray(data[0]);
+}
+
+function isManifest(data: unknown): data is Manifest {
+  return Boolean(
+    data &&
+      typeof data === "object" &&
+      Array.isArray((data as Manifest).parts) &&
+      (data as Manifest).parts.length > 0,
+  );
+}
+
+async function fetchJson(url: string): Promise<unknown> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+function resolvePart(base: string, part: string): string {
+  if (/^https?:\/\//.test(part)) return part;
+  return base.replace(/[^/]+$/, "") + part;
+}
+
+async function rowsFrom(url: string): Promise<CompactPrompt[]> {
+  const data = await fetchJson(url);
+  if (isPromptArray(data)) return data;
+  if (!isManifest(data)) throw new Error("format de banque inconnu");
+  const rows: CompactPrompt[] = [];
+  for (const part of data.parts) {
+    const piece = await fetchJson(resolvePart(url, part));
+    if (!isPromptArray(piece)) throw new Error(`partie invalide: ${part}`);
+    rows.push(...piece);
+  }
+  return rows;
+}
+
 let cached: Prompt[] | null = null;
 
 export async function loadPrompts(): Promise<Prompt[]> {
@@ -40,12 +79,7 @@ export async function loadPrompts(): Promise<Prompt[]> {
   const errors: string[] = [];
   for (const url of BANK_URLS) {
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const rows = (await response.json()) as CompactPrompt[];
-      const prompts = inflate(rows);
+      const prompts = inflate(await rowsFrom(url));
       if (prompts.length < 7) {
         throw new Error(`banque trop petite (${prompts.length})`);
       }
