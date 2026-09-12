@@ -3,7 +3,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 type Props = { children: ReactNode };
-<type State = { crashed: boolean };
+type State = { crashed: boolean };
 
 export class GameErrorBoundary extends Component<Props, State> {
   state: State = { crashed: false };
