@@ -1,3 +1,10 @@
+export const DIVE_MS = 1200;
+
+export function diveDuration(delta: number): number {
+  const abs = Math.abs(delta);
+  return Math.min(1500, Math.max(850, 780 + abs * 0.35));
+}
+
 export function prefersReducedMotion(): boolean {
   try {
     if (typeof window === "undefined" || !window.matchMedia) return false;
