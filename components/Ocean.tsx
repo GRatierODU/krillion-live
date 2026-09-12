@@ -6,6 +6,7 @@ import { Boat, Krill } from "./pixels";
 type OceanProps = {
   depth: number;
   surface: boolean;
+  sinking?: boolean;
 };
 
 function oceanColor(depth: number, surface: boolean): string {
@@ -66,7 +67,7 @@ function useLiteScene() {
   return useSyncExternalStore(subscribeLite, getLite, () => true);
 }
 
-export function Ocean({ depth, surface }: OceanProps) {
+export function Ocean({ depth, surface, sinking = false }: OceanProps) {
   const lite = useLiteScene();
   const skyHidden = !surface && depth > 40;
   const skyHeight = surface ? "46%" : depth < 40 ? "22%" : "0%";
@@ -75,9 +76,11 @@ export function Ocean({ depth, surface }: OceanProps) {
     : depth < 40
       ? "calc(22% - 28px)"
       : "-40px";
+  const drift = Math.min(14, depth / 70);
+  const krillTop = surface ? 54 : Math.min(78, 44 + depth / 55);
 
   return (
-    <div className="scene" aria-hidden>
+    <div className={`scene${sinking ? " sinking" : ""}`} aria-hidden>
       <div
         className="ocean"
         style={{ background: oceanColor(depth, surface) }}
@@ -104,7 +107,7 @@ export function Ocean({ depth, surface }: OceanProps) {
           key={i}
           className={`life fish${fish.big ? " big" : ""}${lite ? " still" : ""}`}
           style={{
-            top: fish.top,
+            top: `calc(${fish.top} + ${drift}vh)`,
             left: lite ? `${12 + i * 28}%` : undefined,
             animationDelay: lite ? undefined : fish.delay,
             animationDuration: lite ? undefined : fish.duration,
@@ -122,7 +125,10 @@ export function Ocean({ depth, surface }: OceanProps) {
           }}
         />
       ))}
-      <span className={`life krill${lite ? " still" : ""}`} style={{ left: "9%", top: "62%" }}>
+      <span
+        className={`life krill${lite ? " still" : ""}${sinking ? " diving" : ""}`}
+        style={{ left: "9%", top: `${krillTop}%` }}
+      >
         <Krill />
       </span>
     </div>
