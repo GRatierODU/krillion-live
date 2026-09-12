@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { safeAnimate } from "@/lib/motion";
+import { DIVE_MS, safeAnimate } from "@/lib/motion";
+import { useAnimatedNumber } from "@/lib/use-animated-number";
 import { playDive, playScore, playTick, unlockAudio } from "@/lib/sfx";
 import {
   PROMPTS_PER_DIVE,
@@ -51,6 +52,15 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   const submitted = useRef(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<() => void>(() => {});
+  const shownDepth = useAnimatedNumber(depth, DIVE_MS);
+  const [sinking, setSinking] = useState(false);
+  const sinkTimer = useRef(0);
+
+  function pulseSink() {
+    setSinking(true);
+    window.clearTimeout(sinkTimer.current);
+    sinkTimer.current = window.setTimeout(() => setSinking(false), DIVE_MS + 80);
+  }
 
   useEffect(() => {
     if (phase !== "prompt") return;
@@ -98,8 +108,8 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     if (phase !== "result" || !resultRef.current) return;
     void safeAnimate(resultRef.current, {
       opacity: [0, 1],
-      translateY: [12, 0],
-      duration: 420,
+      translateY: [18, 0],
+      duration: 720,
       ease: "outQuad",
     });
   }, [phase, grade]);
@@ -137,6 +147,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       setHowto(false);
       setSeconds(SECONDS_PER_PROMPT);
       setPhase("prompt");
+      pulseSink();
     } catch {
       setPhase("home");
     }
@@ -168,6 +179,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       /* sound is optional */
     }
     setPhase("result");
+    pulseSink();
     if (nextResults.length >= PROMPTS_PER_DIVE) {
       recordDive(nextScore, nextDepth);
     }
@@ -205,6 +217,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     setSeconds(SECONDS_PER_PROMPT);
     setIndex((i) => i + 1);
     setPhase("prompt");
+    pulseSink();
   }
 
   function backHome() {
@@ -212,6 +225,8 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     setDraft("");
     setGrade(null);
     setListError(false);
+    setSinking(false);
+    window.clearTimeout(sinkTimer.current);
   }
 
   function toggleMute() {
@@ -229,8 +244,11 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
         : "";
 
   return (
-    <div className="game-root" onPointerDown={unlockAudio}>
-      <Ocean depth={depth} surface={surface} />
+    <div
+      className={`game-root${sinking ? " sinking" : ""}`}
+      onPointerDown={unlockAudio}
+    >
+      <Ocean depth={depth} surface={surface} sinking={sinking} />
       {(phase === "prompt" || phase === "result") && <DepthRuler depth={depth} />}
 
       {phase === "home" ? (
@@ -266,7 +284,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
         <header className="hud">
           <div className="hud-pill left">
             <div className="hud-k">PROFONDEUR</div>
-            <div className="hud-v">{formatMeters(depth)}</div>
+            <div className="hud-v">{formatMeters(Math.round(shownDepth))}</div>
           </div>
           <div className="hud-center">
             <div className="hud-title">{hudTitle}</div>
@@ -409,6 +427,13 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
               enterKeyHint="done"
               aria-label="Ta réponse"
               aria-invalid={listError}
+              onFocus={() => {
+                try {
+                  window.scrollTo(0, 0);
+                } catch {
+                  /* ignore */
+                }
+              }}
             />
             {listError && (
               <p className="list-error" role="status">
