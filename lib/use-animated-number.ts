@@ -16,8 +16,7 @@ export function useAnimatedNumber(target: number, duration = DIVE_MS): number {
     const from = valueRef.current;
     const start = performance.now();
     let raf = 0;
-    const ease = (t: number) =>
-      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 1.28);
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
       const next = from + (target - from) * ease(t);
