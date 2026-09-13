@@ -1,4 +1,4 @@
-use client";
+"use client";
 
 import { useEffect, useRef } from "react";
 import { liveDiveTier, TIER_ASCEND, TIER_COLOR, TIER_LABEL } from "@/lib/scoring";
