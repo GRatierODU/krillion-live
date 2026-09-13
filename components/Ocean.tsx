@@ -10,7 +10,7 @@ type OceanProps = {
 };
 
 const DEPTH_STOPS: { d: number; c: string }[] = [
-  { d: 0, c: "#2a6bb8" },
+  { d: 0, c: "#163e86" },
   { d: 80, c: "#1c529e" },
   { d: 160, c: "#164686" },
   { d: 240, c: "#123a70" },
@@ -38,8 +38,8 @@ function mixHex(a: string, b: string, t: number): string {
 }
 
 function oceanColor(depth: number): string {
-  const d = Math.max(0, depth);
-  if (d <= 0) return "#163e86";
+  const d = Number.isFinite(depth) ? Math.max(0, depth) : 0;
+  if (d < 2) return "#163e86";
   let mixed = DEPTH_STOPS[DEPTH_STOPS.length - 1].c;
   for (let i = 1; i < DEPTH_STOPS.length; i++) {
     if (d <= DEPTH_STOPS[i].d) {
@@ -49,8 +49,8 @@ function oceanColor(depth: number): string {
       break;
     }
   }
-  if (d < 28) {
-    return mixHex(mixed, "#163e86", 1 - d / 28);
+  if (d < 36) {
+    return mixHex(mixed, "#163e86", 1 - (d - 2) / 34);
   }
   return mixed;
 }
@@ -140,7 +140,8 @@ function useLiteScene() {
 
 export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps) {
   const lite = useLiteScene();
-  const camera = Math.max(0, depth);
+  const camera = Number.isFinite(depth) ? Math.max(0, depth) : 0;
+  const diving = sinking && camera > 2;
   const skyAmt = Math.max(0, Math.min(1, 1 - camera / 140));
   const skyHeightPct = 8 + 38 * skyAmt;
   const skyHeight = `${skyHeightPct.toFixed(2)}%`;
@@ -148,8 +149,8 @@ export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps
     skyAmt > 0.02 ? `calc(${skyHeightPct.toFixed(2)}% - 28px)` : "-64px";
   const veil = Math.min(0.72, camera / 2200);
   const floorKelp = Math.max(0, Math.min(1, (camera - 130) / 200));
-  const krillTop = sinking ? 32 : 40 + 14 * skyAmt;
-  const reduced = lite && !sinking;
+  const krillTop = diving ? 32 : 40 + 14 * skyAmt;
+  const reduced = lite && !diving;
 
   const visible = WORLD.filter((item) => {
     const top = worldTop(item.depth, camera);
@@ -158,7 +159,7 @@ export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps
   const fauna = lite ? visible.slice(0, 10) : visible;
 
   return (
-    <div className={`scene${sinking ? " sinking" : ""}`} aria-hidden>
+    <div className={`scene${diving ? " sinking" : ""}`} aria-hidden>
       <div className="ocean" style={{ background: oceanColor(camera) }} />
       <div className="abyss-veil" style={{ opacity: veil }} />
       <div className="sky" style={{ height: skyHeight, opacity: skyAmt }}>
@@ -224,11 +225,11 @@ export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps
       )}
       {!hidePlayer && (
         <span
-          className={`life krill${reduced ? " still" : ""}${sinking ? " diving" : ""}`}
+          className={`life krill${reduced ? " still" : ""}${diving ? " diving" : ""}`}
           style={{ left: "8%", top: `${krillTop}%` }}
         >
           <Krill />
-          {sinking &&
+          {diving &&
             TRAIL.map((puff, i) => (
               <span
                 key={`t-${i}`}
