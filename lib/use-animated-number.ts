@@ -3,12 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import { DIVE_MS, prefersReducedMotion } from "./motion";
 
-export function useAnimatedNumber(target: number, duration = DIVE_MS): number {
+export type NumberEase = "out" | "inout";
+
+function easeOut(t: number) {
+  return 1 - Math.pow(1 - t, 1.28);
+}
+
+function easeInOut(t: number) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+export function useAnimatedNumber(
+  target: number,
+  duration = DIVE_MS,
+  easing: NumberEase = "out",
+): number {
   const [value, setValue] = useState(target);
   const valueRef = useRef(target);
 
   useEffect(() => {
-    if (prefersReducedMotion() || valueRef.current === target) {
+    if (prefersReducedMotion() || duration <= 0 || valueRef.current === target) {
       valueRef.current = target;
       setValue(target);
       return;
@@ -16,7 +30,7 @@ export function useAnimatedNumber(target: number, duration = DIVE_MS): number {
     const from = valueRef.current;
     const start = performance.now();
     let raf = 0;
-    const ease = (t: number) => 1 - Math.pow(1 - t, 1.28);
+    const ease = easing === "inout" ? easeInOut : easeOut;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
       const next = from + (target - from) * ease(t);
@@ -26,7 +40,7 @@ export function useAnimatedNumber(target: number, duration = DIVE_MS): number {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
+  }, [target, duration, easing]);
 
   return value;
 }
