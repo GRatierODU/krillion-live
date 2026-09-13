@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Press_Start_2P, Silkscreen } from "next/font/google";
 import "./globals.css";
+import "./critter.css";
 
 const silkscreen = Silkscreen({
   weight: "400",

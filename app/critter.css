@@ -1,0 +1,33 @@
+/* Live dive creature — must beat the 40px mobile cap in globals.css */
+.dive-critter {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 72px !important;
+  min-width: 96px;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, currentColor 55%, transparent));
+  pointer-events: none;
+  z-index: 3;
+}
+
+.dive-critter svg {
+  width: 80px !important;
+  max-width: none !important;
+  height: auto !important;
+}
+
+.critter-name {
+  font-family: var(--font-pixel), monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: currentColor;
+  text-shadow: 0 0 10px currentColor;
+}
+
+@media (max-width: 420px) {
+  .dive-critter svg {
+    width: 68px !important;
+    max-width: none !important;
+  }
+}
