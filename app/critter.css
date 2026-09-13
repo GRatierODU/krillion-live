@@ -10,6 +10,13 @@ body,
   background: var(--ocean-surface);
 }
 
+/* Old left-edge krill pip — the centered dive creature is the live marker. */
+.life.krill,
+.krill,
+.krill-trail {
+  display: none !important;
+}
+
 .sink-stage,
 .stage.result-stage {
   overflow: visible;
