@@ -1,5 +1,6 @@
 import { inflateGzipBase64 } from "./gunzip";
 import type { CompactPrompt } from "./load";
+import { mergeCompact } from "./merge";
 import { C00 } from "./chunks/c00";
 import { C01 } from "./chunks/c01";
 import { C02 } from "./chunks/c02";
@@ -121,5 +122,11 @@ export const BANK_CHUNKS = [
 ];
 
 export async function loadBundled(): Promise<CompactPrompt[]> {
-  return inflateGzipBase64(BANK_CHUNKS.join(""));
+  const base = await inflateGzipBase64(BANK_CHUNKS.join(""));
+  try {
+    const { loadExtra } = await import("./extra-bundled");
+    return mergeCompact(base, await loadExtra());
+  } catch {
+    return base;
+  }
 }
