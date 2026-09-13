@@ -1,4 +1,5 @@
 import type { Prompt, TierId } from "../types";
+import { loadBundled } from "./bundled";
 
 const TIER: Record<string, TierId> = {
   p: "plancton",
@@ -77,6 +78,24 @@ export async function loadPrompts(): Promise<Prompt[]> {
   if (cached) return cached;
 
   const errors: string[] = [];
+  try {
+    const bundled = inflate(await loadBundled());
+    if (bundled.length >= 500) {
+      const ids = new Set<string>();
+      for (const prompt of bundled) {
+        if (ids.has(prompt.id)) {
+          throw new Error(`Prompt id dupliqué: ${prompt.id}`);
+        }
+        ids.add(prompt.id);
+      }
+      cached = bundled;
+      return cached;
+    }
+    errors.push(`bundled: banque trop petite (${bundled.length})`);
+  } catch (error) {
+    errors.push(`bundled: ${error instanceof Error ? error.message : "échec"}`);
+  }
+
   for (const url of BANK_URLS) {
     try {
       const prompts = inflate(await rowsFrom(url));
