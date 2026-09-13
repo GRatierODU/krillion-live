@@ -43,4 +43,10 @@ export type DiveResult = {
   catalog: AnswerSpec[];
 };
 
-export type Phase = "home" | "prompt" | "result" | "review";
+export type Phase =
+  | "home"
+  | "prompt"
+  | "sink"
+  | "result"
+  | "handoff"
+  | "review";
