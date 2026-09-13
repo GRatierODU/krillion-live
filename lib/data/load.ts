@@ -23,7 +23,9 @@ export const BANK_URLS = [
 ];
 
 export function inflate(rows: CompactPrompt[]): Prompt[] {
-  return rows.map(([id, category, text, answers]) => ({
+  return rows
+    .filter((row) => row[2] !== "" && Array.isArray(row[3]) && row[3].length > 0)
+    .map(([id, category, text, answers]) => ({
     id,
     category,
     text,
