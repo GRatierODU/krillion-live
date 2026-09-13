@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { DIVE_MS, diveDuration, prefersReducedMotion } from "@/lib/motion";
+import {
+  DIVE_MS,
+  DIVE_SETTLE_MS,
+  diveDuration,
+  prefersReducedMotion,
+} from "@/lib/motion";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 import { playDive, playScore, playTick, unlockAudio } from "@/lib/sfx";
 import {
@@ -219,7 +224,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       } catch {
         /* sound is optional */
       }
-    }, wait);
+    }, wait + (prefersReducedMotion() || !grade?.ok ? 0 : DIVE_SETTLE_MS));
     return () => window.clearTimeout(id);
   }, [phase, grade, score, stats.muted]);
 
