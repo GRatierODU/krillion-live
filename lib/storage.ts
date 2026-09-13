@@ -102,3 +102,34 @@ export function setMuted(muted: boolean): Stats {
   saveStats({ ...loadStats(), muted });
   return snapshot;
 }
+
+const RECENT_KEY = "krillion-fr-recent-ids";
+const RECENT_LIMIT = 49;
+
+export function recentPromptIds(): string[] {
+  if (!canUseStorage()) return [];
+  try {
+    const raw = window.localStorage.getItem(RECENT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id): id is string => typeof id === "string");
+  } catch {
+    return [];
+  }
+}
+
+export function rememberRecentIds(ids: string[]): string[] {
+  const next = [...ids, ...recentPromptIds().filter((id) => !ids.includes(id))].slice(
+    0,
+    RECENT_LIMIT,
+  );
+  if (canUseStorage()) {
+    try {
+      window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    } catch {
+      /* private mode / quota */
+    }
+  }
+  return next;
+}

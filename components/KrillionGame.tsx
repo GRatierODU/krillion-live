@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
+  ASCENT_MS,
   DIVE_MS,
   DIVE_SETTLE_MS,
   diveDuration,
@@ -48,6 +49,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [depth, setDepth] = useState(0);
+  const [camDepth, setCamDepth] = useState(0);
   const [results, setResults] = useState<DiveResult[]>([]);
   const [seconds, setSeconds] = useState(SECONDS_PER_PROMPT);
   const [draft, setDraft] = useState("");
@@ -57,7 +59,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   const submitted = useRef(false);
   const timeoutRef = useRef<() => void>(() => {});
   const [animMs, setAnimMs] = useState(DIVE_MS);
-  const shownDepth = useAnimatedNumber(depth, animMs);
+  const shownDepth = useAnimatedNumber(camDepth, animMs);
   const [sinking, setSinking] = useState(false);
   const [shownScore, setShownScore] = useState(0);
   const [handoffN, setHandoffN] = useState(3);
@@ -113,7 +115,9 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   }, [phase, seconds]);
 
   const prompt = dive[index];
-  const surface = phase === "home";
+  const surface =
+    phase === "home" ||
+    ((phase === "prompt" || phase === "handoff") && shownDepth < 12);
   const lastResult = results.length >= PROMPTS_PER_DIVE;
 
   const dots = useMemo(() => {
@@ -138,6 +142,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       setIndex(0);
       setScore(0);
       setDepth(0);
+      setCamDepth(0);
       setResults([]);
       setGrade(null);
       setDraft("");
@@ -171,6 +176,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     setGrade(nextGrade);
     setScore(nextScore);
     setDepth(nextDepth);
+    setCamDepth(nextGrade.meters);
     setResults(nextResults);
     setListError(false);
     try {
@@ -235,6 +241,9 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       return;
     }
     setHandoffN(3);
+    setAnimMs(prefersReducedMotion() ? 200 : ASCENT_MS);
+    setCamDepth(0);
+    setSinking(false);
     setPhase("handoff");
   }
 
@@ -264,6 +273,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     setGrade(null);
     setListError(false);
     setSinking(false);
+    setCamDepth(0);
     window.clearTimeout(sinkTimer.current);
   }
 
@@ -414,7 +424,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       {phase === "handoff" && (
         <div className="stage sink-stage" aria-live="polite">
           <p className="handoff-banner">
-            <strong>descente</strong>
+            <strong>surface</strong>
             {" · le chrono démarre dans "}
             {handoffN}
           </p>

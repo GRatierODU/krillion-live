@@ -25,7 +25,7 @@ npm start
 3. Hors catalogue : le champ se vide, un message rouge **pas dans la liste** s’affiche, et tu réessayes jusqu’à la fin du chrono.
 4. Seulement si le chrono tombe à 0 sans réponse validée : **Temps écoulé**, 0 point, prompt suivant.
 5. **Plonger** (réponse valide) : le cartel apparaît et le monde descend lentement (~2 s) — l’eau s’assombrit, le bateau quitte le cadre, la profondeur défile. Le palier (Plancton, Trop malin, Banc, Rare, Coupe profonde, Un sur un krillion) s’affiche seulement à l’arrivée, puis le score.
-6. **Descendre** : bandeau court (« descente · le chrono démarre dans N »), puis le prompt suivant à la profondeur actuelle — pas une deuxième chute.
+6. **Descendre** : la caméra remonte à la surface, bandeau « surface · le chrono démarre dans N », puis le prompt suivant à 0 m — chaque réponse a sa propre chute.
 7. Après 7 prompts : **bilan** de toutes les réponses, catalogues dépliables par rareté, puis **Nouvelle plongée** ou **Surface**.
 
 Les stats (nombre de plongées, meilleure profondeur, mute) restent dans `localStorage`.
@@ -46,7 +46,7 @@ npx vercel
 
 ## Contenu
 
-Plus de 150 prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Les catégories ouvertes (pays, villes, animaux, départements) ont souvent 30 à 80 réponses, du plancton jusqu’à un sur un krillion.
+159 prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Les catalogues ouverts sont denses : **~36 réponses en moyenne**, le sport autour de **87**. Pays / villes / animaux / départements montent souvent à 50–150 réponses, du plancton jusqu’à un sur un krillion. Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
 
 La banque éditable est `lib/data/bank.json` (copiée vers `public/bank.json` pour le jeu en local). En production le catalogue est aussi chargé depuis le dépôt public `GRatierODU/krillion-prompts` si le fichier local n’est pas déployé.
 

@@ -1,5 +1,6 @@
 import { closeEnough, levenshtein } from "./fuzzy";
 import { aliasSet, normalize } from "./normalize";
+import { rememberRecentIds, recentPromptIds } from "./storage";
 import type { AnswerSpec, Grade, Prompt, TierId } from "./types";
 
 export const TIER_POINTS: Record<TierId, number> = {
@@ -38,13 +39,14 @@ export const TIER_COLOR: Record<TierId, string> = {
   krillion: "#fff4b0",
 };
 
+/** Bilan catalogue: rarest first, plancton last. */
 export const TIER_ORDER: TierId[] = [
-  "plancton",
-  "trop_malin",
-  "banc",
-  "rare",
-  "coupe",
   "krillion",
+  "coupe",
+  "rare",
+  "banc",
+  "trop_malin",
+  "plancton",
 ];
 
 export const METERS_PER_POINT = 10;
@@ -150,16 +152,47 @@ export function pickPlayableDive(bank: Prompt[]): Prompt[] {
   return pickDive(bank);
 }
 
+function cryptoInt(maxExclusive: number): number {
+  if (maxExclusive <= 1) return 0;
+  const rng = typeof globalThis.crypto !== "undefined" ? globalThis.crypto : null;
+  if (rng?.getRandomValues) {
+    const limit = 0x100000000 - (0x100000000 % maxExclusive);
+    const buf = new Uint32Array(1);
+    let x = 0;
+    do {
+      rng.getRandomValues(buf);
+      x = buf[0];
+    } while (x >= limit);
+    return x % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+export function shuffleInPlace<T>(items: T[]): T[] {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = cryptoInt(i + 1);
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
 export function pickDive(bank: Prompt[], count = PROMPTS_PER_DIVE): Prompt[] {
   if (bank.length < count) {
     throw new Error("La banque de prompts est trop petite.");
   }
-  const copy = [...bank];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
+  const recent = new Set(recentPromptIds());
+  const fresh = shuffleInPlace(bank.filter((prompt) => !recent.has(prompt.id)));
+  const reused = shuffleInPlace(bank.filter((prompt) => recent.has(prompt.id)));
+  const picked: Prompt[] = [];
+  const seen = new Set<string>();
+  for (const prompt of [...fresh, ...reused]) {
+    if (seen.has(prompt.id)) continue;
+    seen.add(prompt.id);
+    picked.push(prompt);
+    if (picked.length === count) break;
   }
-  return copy.slice(0, count);
+  rememberRecentIds(picked.map((prompt) => prompt.id));
+  return picked;
 }
 
 export function answer(display: string, tier: TierId, aliases: string[] = []) {

@@ -1,5 +1,6 @@
 export const DIVE_MS = 2100;
 export const DIVE_SETTLE_MS = 180;
+export const ASCENT_MS = 780;
 
 /** Slow cinematic sink: ~1.9–2.5s, then the result card. */
 export function diveDuration(delta: number): number {
