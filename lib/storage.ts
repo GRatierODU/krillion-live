@@ -104,7 +104,8 @@ export function setMuted(muted: boolean): Stats {
 }
 
 const RECENT_KEY = "krillion-fr-recent-ids";
-const RECENT_LIMIT = 49;
+/** ~25 plongées × 7 = 175 ids : 2–3 jours à 10 plongées/jour. */
+const RECENT_LIMIT = 175;
 
 export function recentPromptIds(): string[] {
   if (!canUseStorage()) return [];
