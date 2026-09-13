@@ -46,7 +46,7 @@ npx vercel
 
 ## Contenu
 
-**654** prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Mix champion : culture G FR, pop dense (Marvel/DC, cinéma, séries, jeux, musique, anime), géo à question nette, plus les motifs Krillion (lettres, voisins, capitales). Catalogues denses : **~31 réponses en moyenne**, souvent 40–150 sur les listes ouvertes. Anti-répétition : les **175** derniers IDs restent en `localStorage` (~ 2–3 jours à 10 plongées). Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
+**654** prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Mix champion : culture G FR, pop dense (Marvel/DC, cinéma, séries, jeux, musique, anime), géo à question nette, plus les motifs Krillion (lettres, voisins, capitales). Catalogues denses : **~31 réponses en moyenne**, souvent 40–150 sur les listes ouvertes. Anti-répétition : les **175** derniers IDs restent en `localStorage` (~2–3 jours à 10 plongées). Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
 
 La banque éditable est `lib/data/bank.json`. Elle est compressée en gzip puis découpée en petits modules TypeScript (`lib/data/chunks/`) pour passer les limites d’upload. En production le jeu charge ce bundle ; `GET /api/catalog` renvoie les 654 prompts, `GET /api/catalog?meta=1` renvoie `{ count, ids }`.
 
