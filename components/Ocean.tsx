@@ -10,12 +10,13 @@ type OceanProps = {
 };
 
 const DEPTH_STOPS: { d: number; c: string }[] = [
-  { d: 0, c: "#1c529e" },
-  { d: 100, c: "#1a4a90" },
-  { d: 200, c: "#123a70" },
-  { d: 300, c: "#0c2c54" },
-  { d: 450, c: "#081e3c" },
-  { d: 700, c: "#051428" },
+  { d: 0, c: "#2a6bb8" },
+  { d: 80, c: "#1c529e" },
+  { d: 160, c: "#164686" },
+  { d: 240, c: "#123a70" },
+  { d: 340, c: "#0c2c54" },
+  { d: 480, c: "#081e3c" },
+  { d: 720, c: "#051428" },
   { d: 1200, c: "#030c18" },
   { d: 2000, c: "#020814" },
 ];
@@ -144,7 +145,7 @@ export function Ocean({ depth, surface, sinking = false }: OceanProps) {
       : "-64px";
   const veil = surface ? 0 : Math.min(0.72, camera / 2200);
   const floorKelp = surface ? 0 : Math.max(0, Math.min(1, (camera - 130) / 200));
-  const krillTop = surface ? 54 : 38;
+  const krillTop = surface ? 54 : sinking ? 32 : 40;
   const reduced = lite && !sinking;
 
   const visible = WORLD.filter((item) => {
