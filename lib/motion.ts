@@ -30,6 +30,7 @@ export async function safeAnimate(
   params: {
     opacity?: number[];
     translateY?: number[];
+    scale?: number[];
     duration?: number;
     ease?: string;
   },

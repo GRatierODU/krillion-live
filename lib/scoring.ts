@@ -49,6 +49,33 @@ export const TIER_ORDER: TierId[] = [
   "plancton",
 ];
 
+/** Shallow → abyss, for the live dive creature. */
+export const TIER_ASCEND: TierId[] = [
+  "plancton",
+  "trop_malin",
+  "banc",
+  "rare",
+  "coupe",
+  "krillion",
+];
+
+/** Creature / color band from current camera depth. Lands on a tier at its settle depth. */
+export function tierAtMeters(meters: number): TierId {
+  const d = Math.max(0, meters);
+  if (d > 700) return "krillion";
+  if (d > 500) return "coupe";
+  if (d > 300) return "rare";
+  if (d > 200) return "banc";
+  if (d > 100) return "trop_malin";
+  return "plancton";
+}
+
+export function liveDiveTier(shownMeters: number, cap: TierId): TierId {
+  const raw = TIER_ASCEND.indexOf(tierAtMeters(shownMeters));
+  const limit = TIER_ASCEND.indexOf(cap);
+  return TIER_ASCEND[Math.max(0, Math.min(raw, limit))];
+}
+
 export const METERS_PER_POINT = 10;
 export const PROMPTS_PER_DIVE = 7;
 export const SECONDS_PER_PROMPT = 25;
