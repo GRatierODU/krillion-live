@@ -99,6 +99,53 @@ export const METERS_PER_POINT = 10;
 export const PROMPTS_PER_DIVE = 7;
 export const SECONDS_PER_PROMPT = 25;
 
+/** Banc — palier « nage avec le banc », dénominateur du coef de difficulté. */
+export const TYPICAL_TIER_POINTS = TIER_POINTS.banc;
+export const DIFFICULTY_MIN = 0.75;
+export const DIFFICULTY_MAX = 1.5;
+
+function clamp(n: number, lo: number, hi: number) {
+  return Math.min(hi, Math.max(lo, n));
+}
+
+/** Médiane ; si N pair, moyenne des deux valeurs centrales. */
+export function medianNumber(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 1) return sorted[mid];
+  return (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+export function promptMedianPoints(answers: AnswerSpec[]): number {
+  return medianNumber(answers.map((item) => TIER_POINTS[item.tier] ?? 0));
+}
+
+/** Coef 0,75–1,5 : médiane du prompt ÷ 30 pts (Banc), borné. */
+export function promptDifficulty(medianPoints: number): number {
+  if (!Number.isFinite(medianPoints) || medianPoints <= 0) return DIFFICULTY_MIN;
+  return clamp(medianPoints / TYPICAL_TIER_POINTS, DIFFICULTY_MIN, DIFFICULTY_MAX);
+}
+
+/**
+ * Joueur moyen sur ces 7 : moyenne des médianes pondérée par la difficulté,
+ * ramenée à un total de 7 questions.
+ * reference = Σ(médiane_i × coef_i) / Σ(coef_i) × 7
+ */
+export function typicalDiveReference(catalogs: AnswerSpec[][]): number {
+  if (catalogs.length === 0) return 0;
+  let weighted = 0;
+  let weight = 0;
+  for (const answers of catalogs) {
+    const median = promptMedianPoints(answers);
+    const difficulty = promptDifficulty(median);
+    weighted += median * difficulty;
+    weight += difficulty;
+  }
+  if (weight <= 0) return 0;
+  return (weighted / weight) * catalogs.length;
+}
+
 export function metersFromPoints(points: number): number {
   return points * METERS_PER_POINT;
 }
