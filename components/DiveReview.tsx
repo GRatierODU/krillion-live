@@ -6,11 +6,22 @@ import {
   TIER_LABEL,
   TIER_POINTS,
   groupCatalog,
+  typicalDiveReference,
 } from "@/lib/scoring";
 import type { DiveResult } from "@/lib/types";
 
 function formatMeters(n: number) {
   return `${n.toLocaleString("fr-FR")}m`;
+}
+
+function formatPts(n: number) {
+  return n.toLocaleString("fr-FR");
+}
+
+function versusCopy(delta: number) {
+  if (delta > 0) return "au-dessus de la moyenne sur ces questions";
+  if (delta < 0) return "en dessous de la moyenne sur ces questions";
+  return "dans la moyenne sur ces questions";
 }
 
 type Props = {
@@ -23,15 +34,37 @@ type Props = {
 
 export function DiveReview({ results, score, depth, onReplay, onSurface }: Props) {
   const [open, setOpen] = useState<number | null>(0);
+  const rawRef = typicalDiveReference(results.map((row) => row.catalog));
+  const reference = Math.round(rawRef);
+  const delta = score - reference;
+  const deltaLabel =
+    delta > 0 ? `+${formatPts(delta)}` : delta < 0 ? `−${formatPts(Math.abs(delta))}` : "0";
+  const tone = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
 
   return (
     <div className="review">
       <header className="review-head">
         <p className="review-k">BILAN DE PLONGÉE</p>
-        <p className="review-tot">
-          {score} PTS · {formatMeters(depth)}
-        </p>
+        <p className="review-tot">{formatMeters(depth)}</p>
       </header>
+      <section className="review-vs" aria-label="Score contre le joueur moyen sur ces 7">
+        <p className="review-vs-k">TON SCORE</p>
+        <p className="review-vs-score">
+          {formatPts(score)}
+          <span> PTS</span>
+        </p>
+        <p className="review-vs-avg">
+          Joueur moyen (sur ces 7) : {formatPts(reference)} pts
+        </p>
+        <p className={`review-vs-delta ${tone}`}>
+          Écart : {deltaLabel} pts
+        </p>
+        <p className={`review-vs-phrase ${tone}`}>{versusCopy(delta)}</p>
+        <p className="review-vs-hint">
+          Référence = médiane des points de chaque liste, pondérée par la
+          difficulté (médiane ÷ 30 pts Banc, coef 0,75 à 1,5).
+        </p>
+      </section>
       <ol className="review-list">
         {results.map((row, i) => {
           const expanded = open === i;
