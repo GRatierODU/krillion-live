@@ -15,6 +15,9 @@ import { E11 } from "./extra-chunks/e11";
 import { E12 } from "./extra-chunks/e12";
 import { E13 } from "./extra-chunks/e13";
 import { E14 } from "./extra-chunks/e14";
+import { E15 } from "./extra-chunks/e15";
+import { E16 } from "./extra-chunks/e16";
+import { E17 } from "./extra-chunks/e17";
 
 export const EXTRA_CHUNKS = [
   E00,
@@ -32,6 +35,9 @@ export const EXTRA_CHUNKS = [
   E12,
   E13,
   E14,
+  E15,
+  E16,
+  E17,
 ];
 
 export async function loadExtra(): Promise<CompactPrompt[]> {
