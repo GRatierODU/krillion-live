@@ -145,7 +145,7 @@ export function DiveCritter({ depth, cap, live = false }: DiveCritterProps) {
   const tier = liveDiveTier(depth, cap);
   const color = live ? colorAtDepth(depth, cap) : TIER_COLOR[cap];
   const shown = live ? tier : cap;
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLSpanElement>(null);
   const lastTier = useRef<TierId>(shown);
 
   useEffect(() => {
@@ -160,7 +160,6 @@ export function DiveCritter({ depth, cap, live = false }: DiveCritterProps) {
 
   return (
     <div
-      ref={wrapRef}
       className={`dive-critter${live ? " live" : ""}`}
       data-creature={TIER_CREATURE_KEY[shown]}
       data-morph={live ? "live" : "settle"}
@@ -174,7 +173,9 @@ export function DiveCritter({ depth, cap, live = false }: DiveCritterProps) {
           <i />
         </span>
       )}
-      <Creature tier={shown} color={color} />
+      <span ref={wrapRef} className="dive-critter-sprite">
+        <Creature tier={shown} color={color} />
+      </span>
       <span className="critter-name">{TIER_CREATURE[shown]}</span>
     </div>
   );
