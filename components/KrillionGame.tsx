@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
-  ASCENT_MS,
   DIVE_MS,
   DIVE_SETTLE_MS,
+  SURFACE_HOLD_MS,
+  ascentDuration,
   diveDuration,
   prefersReducedMotion,
 } from "@/lib/motion";
@@ -59,11 +60,16 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   const submitted = useRef(false);
   const timeoutRef = useRef<() => void>(() => {});
   const [animMs, setAnimMs] = useState(DIVE_MS);
-  const shownDepth = useAnimatedNumber(camDepth, animMs);
+  const shownDepth = useAnimatedNumber(
+    camDepth,
+    animMs,
+    phase === "handoff" ? "inout" : "out",
+  );
   const [sinking, setSinking] = useState(false);
   const [shownScore, setShownScore] = useState(0);
-  const [handoffN, setHandoffN] = useState(3);
   const sinkTimer = useRef(0);
+  const ascentMs = useRef(0);
+  const afterHandoff = useRef<"next" | "review">("next");
   const placardRef = useRef<HTMLDivElement>(null);
 
   function pulseSink(ms = DIVE_MS) {
@@ -75,6 +81,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   useEffect(() => {
     if (phase !== "prompt") return;
     submitted.current = false;
+    setSeconds(SECONDS_PER_PROMPT);
     const id = window.setInterval(() => {
       setSeconds((prev) => {
         if (prev <= 1) {
@@ -115,9 +122,6 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   }, [phase, seconds]);
 
   const prompt = dive[index];
-  const surface =
-    phase === "home" ||
-    ((phase === "prompt" || phase === "handoff") && shownDepth < 12);
   const lastResult = results.length >= PROMPTS_PER_DIVE;
 
   const dots = useMemo(() => {
@@ -235,36 +239,32 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   }, [phase, grade, score, stats.muted]);
 
   function continueDive() {
-    if (results.length >= PROMPTS_PER_DIVE) {
-      setPhase("review");
-      setGrade(null);
-      return;
-    }
-    setHandoffN(3);
-    setAnimMs(prefersReducedMotion() ? 200 : ASCENT_MS);
-    setCamDepth(0);
+    const rise = prefersReducedMotion() ? 160 : ascentDuration(camDepth);
+    ascentMs.current = rise;
+    afterHandoff.current =
+      results.length >= PROMPTS_PER_DIVE ? "review" : "next";
+    setGrade(null);
     setSinking(false);
+    setAnimMs(rise);
+    setCamDepth(0);
     setPhase("handoff");
   }
 
   useEffect(() => {
     if (phase !== "handoff") return;
-    let n = 3;
-    const id = window.setInterval(() => {
-      n -= 1;
-      if (n <= 0) {
-        window.clearInterval(id);
-        setDraft("");
-        setGrade(null);
-        setListError(false);
-        setSeconds(SECONDS_PER_PROMPT);
-        setIndex((i) => i + 1);
-        setPhase("prompt");
+    const hold = prefersReducedMotion() ? 80 : SURFACE_HOLD_MS;
+    const id = window.setTimeout(() => {
+      setDraft("");
+      setListError(false);
+      if (afterHandoff.current === "review") {
+        setPhase("review");
         return;
       }
-      setHandoffN(n);
-    }, 700);
-    return () => window.clearInterval(id);
+      setSeconds(SECONDS_PER_PROMPT);
+      setIndex((i) => i + 1);
+      setPhase("prompt");
+    }, ascentMs.current + hold);
+    return () => window.clearTimeout(id);
   }, [phase]);
 
   function backHome() {
@@ -301,7 +301,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       className={`game-root${sinking ? " sinking" : ""}`}
       onPointerDown={unlockAudio}
     >
-      <Ocean depth={shownDepth} surface={surface} sinking={sinking} />
+      <Ocean depth={shownDepth} sinking={sinking} />
       {inDive && <DepthRuler depth={shownDepth} />}
 
       {phase === "home" ? (
@@ -418,16 +418,6 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
           ) : (
             <p className="sink-k">temps écoulé</p>
           )}
-        </div>
-      )}
-
-      {phase === "handoff" && (
-        <div className="stage sink-stage" aria-live="polite">
-          <p className="handoff-banner">
-            <strong>surface</strong>
-            {" · le chrono démarre dans "}
-            {handoffN}
-          </p>
         </div>
       )}
 

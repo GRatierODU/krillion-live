@@ -5,7 +5,6 @@ import { Boat, Krill } from "./pixels";
 
 type OceanProps = {
   depth: number;
-  surface: boolean;
   sinking?: boolean;
 };
 
@@ -37,17 +36,21 @@ function mixHex(a: string, b: string, t: number): string {
   return `rgb(${clamp(ar + (br - ar) * t)}, ${clamp(ag + (bg - ag) * t)}, ${clamp(ab + (bb - ab) * t)})`;
 }
 
-function oceanColor(depth: number, surface: boolean): string {
-  if (surface) return "#163e86";
+function oceanColor(depth: number): string {
   const d = Math.max(0, depth);
+  let mixed = DEPTH_STOPS[DEPTH_STOPS.length - 1].c;
   for (let i = 1; i < DEPTH_STOPS.length; i++) {
     if (d <= DEPTH_STOPS[i].d) {
       const prev = DEPTH_STOPS[i - 1];
       const next = DEPTH_STOPS[i];
-      return mixHex(prev.c, next.c, (d - prev.d) / (next.d - prev.d));
+      mixed = mixHex(prev.c, next.c, (d - prev.d) / (next.d - prev.d));
+      break;
     }
   }
-  return DEPTH_STOPS[DEPTH_STOPS.length - 1].c;
+  if (d < 28) {
+    return mixHex(mixed, "#163e86", 1 - d / 28);
+  }
+  return mixed;
 }
 
 const SPAN = 280;
@@ -133,23 +136,20 @@ function useLiteScene() {
   return useSyncExternalStore(subscribeLite, getLite, () => true);
 }
 
-export function Ocean({ depth, surface, sinking = false }: OceanProps) {
+export function Ocean({ depth, sinking = false }: OceanProps) {
   const lite = useLiteScene();
-  const camera = surface ? 0 : Math.max(0, depth);
-  const skyAmt = surface ? 1 : Math.max(0, 1 - camera / 175);
-  const skyHeight = `${(surface ? 46 : 22 * skyAmt).toFixed(2)}%`;
-  const boatTop = surface
-    ? "calc(46% - 28px)"
-    : skyAmt > 0
-      ? `calc(${(22 * skyAmt).toFixed(2)}% - 28px)`
-      : "-64px";
-  const veil = surface ? 0 : Math.min(0.72, camera / 2200);
-  const floorKelp = surface ? 0 : Math.max(0, Math.min(1, (camera - 130) / 200));
-  const krillTop = surface ? 54 : sinking ? 32 : 40;
+  const camera = Math.max(0, depth);
+  const skyAmt = Math.max(0, Math.min(1, 1 - camera / 140));
+  const skyHeightPct = 8 + 38 * skyAmt;
+  const skyHeight = `${skyHeightPct.toFixed(2)}%`;
+  const boatTop =
+    skyAmt > 0.02 ? `calc(${skyHeightPct.toFixed(2)}% - 28px)` : "-64px";
+  const veil = Math.min(0.72, camera / 2200);
+  const floorKelp = Math.max(0, Math.min(1, (camera - 130) / 200));
+  const krillTop = sinking ? 32 : 40 + 14 * skyAmt;
   const reduced = lite && !sinking;
 
   const visible = WORLD.filter((item) => {
-    if (surface) return item.depth < 80;
     const top = worldTop(item.depth, camera);
     return top > -12 && top < 112;
   });
@@ -157,7 +157,7 @@ export function Ocean({ depth, surface, sinking = false }: OceanProps) {
 
   return (
     <div className={`scene${sinking ? " sinking" : ""}`} aria-hidden>
-      <div className="ocean" style={{ background: oceanColor(camera, surface) }} />
+      <div className="ocean" style={{ background: oceanColor(camera) }} />
       <div className="abyss-veil" style={{ opacity: veil }} />
       <div className="sky" style={{ height: skyHeight, opacity: skyAmt }}>
         <span className="sun" />
