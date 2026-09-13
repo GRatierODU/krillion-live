@@ -24,7 +24,7 @@ npm start
 2. Tape **une** réponse, puis **Plonger**. Une faute de frappe raisonnable est acceptée.
 3. Hors catalogue : le champ se vide, un message rouge **pas dans la liste** s’affiche, et tu réessayes jusqu’à la fin du chrono.
 4. Seulement si le chrono tombe à 0 sans réponse validée : **Temps écoulé**, 0 point, prompt suivant.
-5. **Plonger** (réponse valide) : le cartel de la réponse apparaît et la caméra descend d’un seul trait (~1–2 s). Pendant la chute, la profondeur défile, le monde s’assombrit, le krill laisse des bulles. Le score n’augmente qu’à l’arrivée, quand le palier (Plancton, Trop malin, Banc, Rare, Coupe profonde, Un sur un krillion) s’affiche.
+5. **Plonger** (réponse valide) : le cartel apparaît et le monde descend lentement (~2 s) — l’eau s’assombrit, le bateau quitte le cadre, la profondeur défile. Le palier (Plancton, Trop malin, Banc, Rare, Coupe profonde, Un sur un krillion) s’affiche seulement à l’arrivée, puis le score.
 6. **Descendre** : bandeau court (« descente · le chrono démarre dans N »), puis le prompt suivant à la profondeur actuelle — pas une deuxième chute.
 7. Après 7 prompts : **bilan** de toutes les réponses, catalogues dépliables par rareté, puis **Nouvelle plongée** ou **Surface**.
 
