@@ -28,7 +28,7 @@ npm start
 6. **Descendre** : la caméra remonte à la surface, bandeau « surface · le chrono démarre dans N », puis le prompt suivant à 0 m — chaque réponse a sa propre chute.
 7. Après 7 prompts : **bilan** de toutes les réponses, catalogues dépliables par rareté, puis **Nouvelle plongée** ou **Surface**.
 
-Les stats (nombre de plongées, meilleure profondeur, mute) restent dans `localStorage`.
+Les stats (nombre de plongées, meilleure profondeur, mute) restent dans `localStorage`. Anti-répétition : les **175** derniers IDs restent en mémoire (~2–3 jours à 10 plongées/jour).
 
 ## Déployer sur Vercel
 
@@ -46,9 +46,9 @@ npx vercel
 
 ## Contenu
 
-159 prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Les catalogues ouverts sont denses : **~36 réponses en moyenne**, le sport autour de **87**. Pays / villes / animaux / départements montent souvent à 50–150 réponses, du plancton jusqu’à un sur un krillion. Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
+Catalogue en expansion (culture G FR, pop, géo nette, motifs Krillion). En production le manifeste GitHub charge les parties stables plus la vague champion. En local : **523** prompts, **~30 réponses** en moyenne. Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
 
-La banque éditable est `lib/data/bank.json` (copiée vers `public/bank.json` pour le jeu en local). En production le catalogue est aussi chargé depuis le dépôt public `GRatierODU/krillion-prompts` si le fichier local n’est pas déployé.
+La banque éditable est `lib/data/bank.json` (copiée vers `public/bank.json` pour le jeu en local). En production le catalogue est chargé depuis `GRatierODU/krillion-prompts`.
 
 Après un changement :
 
