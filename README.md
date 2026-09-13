@@ -4,7 +4,7 @@ Clone solo français de [krillion.io](https://krillion.io) pour s’entraîner �
 
 Une plongée = **7 prompts**, **25 secondes** chacun. Les réponses rares rapportent plus de points et font descendre (1 point = 10 mètres). Le matching se fait uniquement contre un catalogue d’alias, sans IA.
 
-La banque compte **816** prompts champion : géographie, arts, sciences, sport, cuisine, quotidien, et **140** d’histoire — France (rois, Révolution, Vichy, Algérie…) et monde (Antiquité, empires, guerres mondiales, indépendances, ONU…). Le matching accepte aussi un mot vraiment contenu dans une réponse (`spiderman` → Amazing Spider-Man) et des fautes de frappe un peu plus larges.
+La banque compte **817** prompts champion : géographie, arts, sciences, sport, cuisine, quotidien, et **140** d’histoire — France (rois, Révolution, Vichy, Algérie…) et monde (Antiquité, empires, guerres mondiales, indépendances, ONU…). Le matching accepte aussi un mot vraiment contenu dans une réponse (`spiderman` → Amazing Spider-Man) et des fautes de frappe un peu plus larges.
 
 ## Lancer en local
 
@@ -48,15 +48,15 @@ npx vercel
 
 ## Contenu
 
-**816** prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Mix champion : culture G FR, pop dense (Marvel/DC, cinéma, séries, jeux, musique, anime), **histoire France + monde** (Antiquité, empires, guerres, indépendances, ONU), géo à question nette (listes densifiées ou recentrées), plus les motifs Krillion (lettres, voisins, capitales, fromages). Catalogues denses : **~33 réponses en moyenne**, souvent 40–150 sur les listes ouvertes. Anti-répétition : les **175** derniers IDs restent en `localStorage` (~2–3 jours à 10 plongées). Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
+**817** prompts (géographie, histoire, sciences, arts, sport, cuisine, quotidien). Mix champion : culture G FR, pop dense (Marvel/DC, cinéma, séries, jeux, musique, anime), **histoire France + monde** (Antiquité, empires, guerres, indépendances, ONU), géo à question nette (listes densifiées ou recentrées), plus les motifs Krillion (lettres, voisins, capitales, fromages). Catalogues denses : **~33 réponses en moyenne**, souvent 40–150 sur les listes ouvertes. Anti-répétition : les **175** derniers IDs restent en `localStorage` (~2–3 jours à 10 plongées). Au bilan, les paliers vont du plus rare (Un sur un krillion) au plancton.
 
-La banque éditable est `lib/data/bank.json`. Le catalogue live de base reste dans `lib/data/chunks/` ; les vagues QA / lettres / géo / OU sont un second gzip (`lib/data/extra-chunks/`) fusionné au chargement. `GET /api/catalog` renvoie les 816 prompts, `GET /api/catalog?meta=1` renvoie `{ count, ids }`.
+La banque éditable est `lib/data/bank.json`. Le catalogue live de base reste dans `lib/data/chunks/` ; les vagues QA / lettres / géo / OU sont un second gzip (`lib/data/extra-chunks/`) fusionné au chargement. `GET /api/catalog` renvoie les 817 prompts, `GET /api/catalog?meta=1` renvoie `{ count, ids }`.
 
 Après un changement :
 
 ```bash
 python3 scripts/expand-histoire.py         # vague histoire de France
 python3 scripts/expand-histoire-monde.py   # vague histoire mondiale
-python3 scripts/expand-pop.py              # vague pop / superhéros
+python3 scripts/hydro-pass.py              # baies / golfes / rades (scope + listes)
 python3 scripts/pack-extra.py              # delta histoire → extra-chunks
 ```
