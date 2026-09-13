@@ -1,12 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { Boat, Krill } from "./pixels";
+import { Boat } from "./pixels";
 
 type OceanProps = {
   depth: number;
   sinking?: boolean;
-  hidePlayer?: boolean;
 };
 
 const DEPTH_STOPS: { d: number; c: string }[] = [
@@ -94,14 +93,6 @@ const WORLD: Critter[] = [
   { kind: "kelp", depth: 460, x: 91, h: 50, flip: true, delay: "0.1s" },
 ];
 
-const TRAIL = [
-  { dx: 10, delay: "0s" },
-  { dx: 18, delay: "0.12s" },
-  { dx: 6, delay: "0.28s" },
-  { dx: 24, delay: "0.4s" },
-  { dx: 14, delay: "0.55s" },
-];
-
 function worldTop(worldDepth: number, camera: number) {
   const min = camera - SPAN * 0.42;
   return ((worldDepth - min) / SPAN) * 100;
@@ -138,7 +129,7 @@ function useLiteScene() {
   return useSyncExternalStore(subscribeLite, getLite, () => true);
 }
 
-export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps) {
+export function Ocean({ depth, sinking = false }: OceanProps) {
   const lite = useLiteScene();
   const camera = Number.isFinite(depth) ? Math.max(0, depth) : 0;
   const diving = sinking && camera > 2;
@@ -149,7 +140,6 @@ export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps
     skyAmt > 0.02 ? `calc(${skyHeightPct.toFixed(2)}% - 28px)` : "-64px";
   const veil = Math.min(0.72, camera / 2200);
   const floorKelp = Math.max(0, Math.min(1, (camera - 130) / 200));
-  const krillTop = diving ? 32 : 40 + 14 * skyAmt;
   const reduced = lite && !diving;
 
   const visible = WORLD.filter((item) => {
@@ -222,22 +212,6 @@ export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps
           <span className="kelp floor flip" style={{ left: "87%", height: "38%", opacity: floorKelp * 0.65 }} />
           <span className="kelp floor" style={{ left: "94%", height: "50%", opacity: floorKelp * 0.75 }} />
         </>
-      )}
-      {!hidePlayer && (
-        <span
-          className={`life krill${reduced ? " still" : ""}${diving ? " diving" : ""}`}
-          style={{ left: "8%", top: `${krillTop}%` }}
-        >
-          <Krill />
-          {diving &&
-            TRAIL.map((puff, i) => (
-              <span
-                key={`t-${i}`}
-                className="krill-trail"
-                style={{ left: `${14 + puff.dx}px`, animationDelay: puff.delay }}
-              />
-            ))}
-        </span>
       )}
     </div>
   );
