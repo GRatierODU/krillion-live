@@ -17,15 +17,26 @@ export function levenshtein(a: string, b: string): number {
   return prev[n] ?? n;
 }
 
-/** Conservative typo check: accents already stripped. Unrelated short words stay out. */
+/** Length-scaled typo check. Accents already stripped. */
 export function closeEnough(input: string, candidate: string): boolean {
   if (!input || !candidate) return false;
   if (input === candidate) return true;
   const min = Math.min(input.length, candidate.length);
   const max = Math.max(input.length, candidate.length);
   if (min < 3) return false;
-  if (max - min > (min <= 5 ? 1 : 2)) return false;
-  const distance = levenshtein(input, candidate);
-  if (min <= 5) return distance <= 1;
-  return distance <= 2;
+  const allowed = min <= 4 ? 1 : min <= 7 ? 2 : min <= 11 ? 3 : 4;
+  if (max - min > allowed) return false;
+  return levenshtein(input, candidate) <= allowed;
+}
+
+/** Substantial substring after normalize/compact. Blocks 1–2 letter junk. */
+export function substantialContainment(input: string, candidate: string): boolean {
+  if (!input || !candidate || input === candidate) return false;
+  const shorter = input.length <= candidate.length ? input : candidate;
+  const longer = input.length <= candidate.length ? candidate : input;
+  if (shorter.length < 4 && shorter.length < 0.6 * longer.length) return false;
+  if (input.length < 4 && candidate.length >= 4 && !longer.includes(shorter)) {
+    return false;
+  }
+  return longer.includes(shorter);
 }

@@ -11,6 +11,9 @@ const ARTICLES = new Set([
   "au",
   "aux",
   "d",
+  "the",
+  "a",
+  "an",
 ]);
 
 export function normalize(raw: string): string {
@@ -31,6 +34,10 @@ export function normalize(raw: string): string {
     words.shift();
   }
   return words.join(" ");
+}
+
+export function compactKey(value: string): string {
+  return value.replace(/ /g, "");
 }
 
 export function aliasSet(canonical: string, aliases: string[] = []): string[] {
