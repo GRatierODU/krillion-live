@@ -39,6 +39,25 @@ export const TIER_COLOR: Record<TierId, string> = {
   krillion: "#fff4b0",
 };
 
+/** French creature names shown above the answer placard while diving. */
+export const TIER_CREATURE: Record<TierId, string> = {
+  plancton: "BULLES",
+  trop_malin: "CREVETTE",
+  banc: "POISSON",
+  rare: "POISSON ROSE",
+  coupe: "MÉDUSE",
+  krillion: "BAUDROIE",
+};
+
+export const TIER_CREATURE_KEY: Record<TierId, string> = {
+  plancton: "bulles",
+  trop_malin: "crevette",
+  banc: "poisson",
+  rare: "poisson-rose",
+  coupe: "meduse",
+  krillion: "baudroie",
+};
+
 /** Bilan catalogue: rarest first, plancton last. */
 export const TIER_ORDER: TierId[] = [
   "krillion",
