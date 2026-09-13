@@ -81,5 +81,191 @@ const WORLD: Critter[] = [
   { kind: "bubble", depth: 70, x: 48, delay: "1.4s" },
   { kind: "bubble", depth: 110, x: 63, delay: "0.6s" },
   { kind: "bubble", depth: 155, x: 81, delay: "2.1s" },
-  { kind: "blobble", depth: 200, x: 28, delay: "1.1s" },
+  { kind: "bubble", depth: 200, x: 28, delay: "1.1s" },
+  { kind: "bubble", depth: 260, x: 54, delay: "0.8s" },
+  { kind: "bubble", depth: 330, x: 12, delay: "1.7s" },
+  { kind: "kelp", depth: 175, x: 2, h: 46, delay: "0s" },
+  { kind: "kelp", depth: 210, x: 8, h: 34, flip: true, delay: "0.4s" },
+  { kind: "kelp", depth: 235, x: 88, h: 40, flip: true, delay: "0.2s" },
+  { kind: "kelp", depth: 270, x: 94, h: 52, delay: "0.7s" },
+  { kind: "kelp", depth: 310, x: 4, h: 48, delay: "0.3s" },
+  { kind: "kelp", depth: 345, x: 86, h: 44, flip: true, delay: "0.9s" },
+  { kind: "kelp", depth: 400, x: 10, h: 38, delay: "0.5s" },
+  { kind: "kelp", depth: 460, x: 91, h: 50, flip: true, delay: "0.1s" },
 ];
+
+const TRAIL = [
+  { dx: 10, delay: "0s" },
+  { dx: 18, delay: "0.12s" },
+  { dx: 6, delay: "0.28s" },
+  { dx: 24, delay: "0.4s" },
+  { dx: 14, delay: "0.55s" },
+];
+
+function worldTop(worldDepth: number, camera: number) {
+  const min = camera - SPAN * 0.42;
+  return ((worldDepth - min) / SPAN) * 100;
+}
+
+function subscribeLite(onChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  try {
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const wide = window.matchMedia("(min-width: 520px)");
+    motion.addEventListener("change", onChange);
+    wide.addEventListener("change", onChange);
+    return () => {
+      motion.removeEventListener("change", onChange);
+      wide.removeEventListener("change", onChange);
+    };
+  } catch {
+    return () => {};
+  }
+}
+
+function getLite() {
+  try {
+    return (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !window.matchMedia("(min-width: 520px)").matches
+    );
+  } catch {
+    return true;
+  }
+}
+
+function useLiteScene() {
+  return useSyncExternalStore(subscribeLite, getLite, () => true);
+}
+
+export function Ocean({ depth, sinking = false, hidePlayer = false }: OceanProps) {
+  const lite = useLiteScene();
+  const camera = Math.max(0, depth);
+  const skyAmt = Math.max(0, Math.min(1, 1 - camera / 140));
+  const skyHeightPct = 8 + 38 * skyAmt;
+  const skyHeight = `${skyHeightPct.toFixed(2)}%`;
+  const boatTop =
+    skyAmt > 0.02 ? `calc(${skyHeightPct.toFixed(2)}% - 28px)` : "-64px";
+  const veil = Math.min(0.72, camera / 2200);
+  const floorKelp = Math.max(0, Math.min(1, (camera - 130) / 200));
+  const krillTop = sinking ? 32 : 40 + 14 * skyAmt;
+  const reduced = lite && !sinking;
+
+  const visible = WORLD.filter((item) => {
+    const top = worldTop(item.depth, camera);
+    return top > -12 && top < 112;
+  });
+  const fauna = lite ? visible.slice(0, 10) : visible;
+
+  return (
+    <div className={`scene${sinking ? " sinking" : ""}`} aria-hidden>
+      <div className="ocean" style={{ background: oceanColor(camera) }} />
+      <div className="abyss-veil" style={{ opacity: veil }} />
+      <div className="sky" style={{ height: skyHeight, opacity: skyAmt }}>
+        <span className="sun" />
+        <span className="cloud" style={{ top: 36, left: "7%" }} />
+        <span className="cloud" style={{ top: 58, left: "24%" }} />
+        <span className="cloud" style={{ top: 30, right: "22%" }} />
+        <span className="cloud" style={{ top: 70, right: "6%" }} />
+      </div>
+      <div className="horizon" style={{ top: skyHeight, opacity: skyAmt }} />
+      <div className="boat" style={{ top: boatTop, left: "18%", opacity: skyAmt }}>
+        <Boat />
+      </div>
+      {fauna.map((item, i) => {
+        const top = `${worldTop(item.depth, camera).toFixed(2)}%`;
+        if (item.kind === "fish") {
+          return (
+            <span
+              key={`f-${i}`}
+              className={`life fish${item.big ? " big" : ""}${reduced ? " still" : ""}`}
+              style={{
+                top,
+                left: `${item.x}%`,
+                animationDelay: reduced ? undefined : item.delay,
+                animationDuration: reduced ? undefined : item.dur,
+              }}
+            />
+          );
+        }
+        if (item.kind === "bubble") {
+          return (
+            <span
+              key={`b-${i}`}
+              className={`life bubble${reduced ? " still" : ""}`}
+              style={{
+                top,
+                left: `${item.x}%`,
+                animationDelay: reduced ? undefined : item.delay,
+              }}
+            />
+          );
+        }
+        return (
+          <span
+            key={`k-${i}`}
+            className={`kelp drift${item.flip ? " flip" : ""}`}
+            style={{
+              top,
+              left: `${item.x}%`,
+              height: `${item.h}%`,
+              animationDelay: item.delay,
+            }}
+          />
+        );
+      })}
+      {floorKelp > 0.04 && (
+        <>
+          <span className="kelp floor" style={{ left: "1%", height: "42%", opacity: floorKelp * 0.7 }} />
+          <span className="kelp floor flip" style={{ left: "7%", height: "30%", opacity: floorKelp * 0.55 }} />
+          <span className="kelp floor flip" style={{ left: "87%", height: "38%", opacity: floorKelp * 0.65 }} />
+          <span className="kelp floor" style={{ left: "94%", height: "50%", opacity: floorKelp * 0.75 }} />
+        </>
+      )}
+      {!hidePlayer && (
+        <span
+          className={`life krill${reduced ? " still" : ""}${sinking ? " diving" : ""}`}
+          style={{ left: "8%", top: `${krillTop}%` }}
+        >
+          <Krill />
+          {sinking &&
+            TRAIL.map((puff, i) => (
+              <span
+                key={`t-${i}`}
+                className="krill-trail"
+                style={{ left: `${14 + puff.dx}px`, animationDelay: puff.delay }}
+              />
+            ))}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function DepthRuler({ depth }: { depth: number }) {
+  const min = depth - SPAN * 0.42;
+  const max = depth + SPAN * 0.58;
+  const first = Math.ceil(min / 100) * 100;
+  const ticks: number[] = [];
+  for (let tick = first; tick <= max; tick += 100) {
+    if (tick >= 0) ticks.push(tick);
+  }
+  const pct = (value: number) => {
+    const t = (value - min) / (max - min);
+    return `${Math.min(96, Math.max(4, t * 100))}%`;
+  };
+
+  return (
+    <div className="ruler" aria-hidden>
+      <div className="ruler-line" />
+      {ticks.map((tick) => (
+        <div key={tick} className="tick" style={{ top: pct(tick) }}>
+          -{tick}m
+        </div>
+      ))}
+      <div className="you" style={{ top: pct(depth) }}>
+        VOUS
+      </div>
+    </div>
+  );
+}
