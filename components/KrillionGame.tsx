@@ -155,9 +155,9 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       setHowto(false);
       setSeconds(SECONDS_PER_PROMPT);
       setShownScore(0);
-      setAnimMs(900);
+      setSinking(false);
+      setAnimMs(0);
       setPhase("prompt");
-      pulseSink(900);
     } catch {
       setPhase("home");
     }
@@ -274,6 +274,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     setGrade(null);
     setListError(false);
     setSinking(false);
+    setAnimMs(0);
     setCamDepth(0);
     window.clearTimeout(sinkTimer.current);
   }
@@ -430,16 +431,26 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       )}
 
       {phase === "result" && grade && (
-        <div className="stage">
+        <div className="stage result-stage">
           <div className="result">
-            <div className="result-icon">
-              <span className="result-bubbles" aria-hidden>
-                <i />
-                <i />
-                <i />
-              </span>
-              {grade.ok && <DiveCritter depth={grade.meters} cap={grade.tier} />}
-            </div>
+            {grade.ok ? (
+              <div className="result-critter">
+                <span className="result-bubbles" aria-hidden>
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <DiveCritter depth={grade.meters} cap={grade.tier} />
+              </div>
+            ) : (
+              <div className="result-icon">
+                <span className="result-bubbles" aria-hidden>
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              </div>
+            )}
             <div
               className="tier"
               style={{
@@ -483,42 +494,44 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
             trySubmit(draft);
           }}
         >
-          <div className={`timer${seconds <= 5 ? " low" : ""}`} aria-live="polite">
-            {seconds}
+          <div className="dock-row">
+            <div className={`timer${seconds <= 5 ? " low" : ""}`} aria-live="polite">
+              {seconds}
+            </div>
+            <div className="field-wrap">
+              <input
+                ref={inputRef}
+                className={`field${listError ? " bad" : ""}`}
+                value={draft}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  if (listError) setListError(false);
+                }}
+                placeholder="tape une réponse..."
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
+                aria-label="Ta réponse"
+                aria-invalid={listError}
+                onFocus={() => {
+                  try {
+                    window.scrollTo(0, 0);
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+              />
+              {listError && (
+                <p className="list-error" role="status">
+                  pas dans la liste
+                </p>
+              )}
+            </div>
+            <button className="dive-btn" type="submit">
+              PLONGER
+            </button>
           </div>
-          <div className="field-wrap">
-            <input
-              ref={inputRef}
-              className={`field${listError ? " bad" : ""}`}
-              value={draft}
-              onChange={(event) => {
-                setDraft(event.target.value);
-                if (listError) setListError(false);
-              }}
-              placeholder="tape une réponse..."
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="done"
-              aria-label="Ta réponse"
-              aria-invalid={listError}
-              onFocus={() => {
-                try {
-                  window.scrollTo(0, 0);
-                } catch {
-                  /* ignore */
-                }
-              }}
-            />
-            {listError && (
-              <p className="list-error" role="status">
-                pas dans la liste
-              </p>
-            )}
-          </div>
-          <button className="dive-btn" type="submit">
-            PLONGER
-          </button>
         </form>
       )}
 
