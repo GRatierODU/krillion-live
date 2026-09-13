@@ -61,11 +61,15 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
   const submitted = useRef(false);
   const timeoutRef = useRef<() => void>(() => {});
   const [animMs, setAnimMs] = useState(DIVE_MS);
-  const shownDepth = useAnimatedNumber(
+  const motionDepth = useAnimatedNumber(
     camDepth,
     animMs,
     phase === "handoff" ? "inout" : "out",
   );
+  const shownDepth =
+    phase === "prompt" || phase === "home" || phase === "review"
+      ? 0
+      : motionDepth;
   const [sinking, setSinking] = useState(false);
   const [shownScore, setShownScore] = useState(0);
   const sinkTimer = useRef(0);
@@ -244,8 +248,10 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
     ascentMs.current = rise;
     afterHandoff.current =
       results.length >= PROMPTS_PER_DIVE ? "review" : "next";
+    submitted.current = true;
     setGrade(null);
     setSinking(false);
+    setSeconds(SECONDS_PER_PROMPT);
     setAnimMs(rise);
     setCamDepth(0);
     setPhase("handoff");
@@ -253,10 +259,14 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
 
   useEffect(() => {
     if (phase !== "handoff") return;
+    const rise = ascentMs.current;
     const hold = prefersReducedMotion() ? 80 : SURFACE_HOLD_MS;
     const id = window.setTimeout(() => {
       setDraft("");
       setListError(false);
+      setSinking(false);
+      setCamDepth(0);
+      setAnimMs(0);
       if (afterHandoff.current === "review") {
         setPhase("review");
         return;
@@ -264,7 +274,7 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       setSeconds(SECONDS_PER_PROMPT);
       setIndex((i) => i + 1);
       setPhase("prompt");
-    }, ascentMs.current + hold);
+    }, rise + hold);
     return () => window.clearTimeout(id);
   }, [phase]);
 
@@ -300,12 +310,12 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
 
   return (
     <div
-      className={`game-root${sinking ? " sinking" : ""}`}
+      className={`game-root${sinking && phase === "sink" ? " sinking" : ""}`}
       onPointerDown={unlockAudio}
     >
       <Ocean
         depth={shownDepth}
-        sinking={sinking}
+        sinking={sinking && phase === "sink" && shownDepth > 2}
         hidePlayer={phase === "sink"}
       />
       {inDive && <DepthRuler depth={shownDepth} />}
