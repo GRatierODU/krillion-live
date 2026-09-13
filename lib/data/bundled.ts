@@ -1,3 +1,5 @@
+import { inflateGzipBase64 } from "./gunzip";
+import type { CompactPrompt } from "./load";
 import { C00 } from "./chunks/c00";
 import { C01 } from "./chunks/c01";
 import { C02 } from "./chunks/c02";
@@ -42,6 +44,20 @@ import { C40 } from "./chunks/c40";
 import { C41 } from "./chunks/c41";
 import { C42 } from "./chunks/c42";
 import { C43 } from "./chunks/c43";
+import { C44 } from "./chunks/c44";
+import { C45 } from "./chunks/c45";
+import { C46 } from "./chunks/c46";
+import { C47 } from "./chunks/c47";
+import { C48 } from "./chunks/c48";
+import { C49 } from "./chunks/c49";
+import { C50 } from "./chunks/c50";
+import { C51 } from "./chunks/c51";
+import { C52 } from "./chunks/c52";
+import { C53 } from "./chunks/c53";
+import { C54 } from "./chunks/c54";
+import { C55 } from "./chunks/c55";
+import { C56 } from "./chunks/c56";
+import { C57 } from "./chunks/c57";
 
 export const BANK_CHUNKS = [
   C00,
@@ -88,10 +104,21 @@ export const BANK_CHUNKS = [
   C41,
   C42,
   C43,
+  C44,
+  C45,
+  C46,
+  C47,
+  C48,
+  C49,
+  C50,
+  C51,
+  C52,
+  C53,
+  C54,
+  C55,
+  C56,
+  C57,
 ];
-
-import { inflateGzipBase64 } from "./gunzip";
-import type { CompactPrompt } from "./load";
 
 export async function loadBundled(): Promise<CompactPrompt[]> {
   return inflateGzipBase64(BANK_CHUNKS.join(""));
