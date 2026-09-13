@@ -1,5 +1,5 @@
-import { closeEnough, levenshtein } from "./fuzzy";
-import { aliasSet, normalize } from "./normalize";
+import { closeEnough, levenshtein, substantialContainment } from "./fuzzy";
+import { aliasSet, compactKey, normalize } from "./normalize";
 import { rememberRecentIds, recentPromptIds } from "./storage";
 import type { AnswerSpec, Grade, Prompt, TierId } from "./types";
 
@@ -154,43 +154,72 @@ function keysOf(answer: AnswerSpec): string[] {
   return aliasSet(answer.display, answer.aliases);
 }
 
+const TIER_COMMON_FIRST = TIER_ASCEND;
+
+type MatchRank = 0 | 1 | 2 | 3;
+
+function tierCommonness(tier: TierId): number {
+  const idx = TIER_COMMON_FIRST.indexOf(tier);
+  return idx < 0 ? 99 : idx;
+}
+
+function betterMatch(
+  next: { answer: AnswerSpec; rank: MatchRank; score: number },
+  best: { answer: AnswerSpec; rank: MatchRank; score: number } | null,
+): boolean {
+  if (!best) return true;
+  if (next.rank !== best.rank) return next.rank < best.rank;
+  if (next.score !== best.score) return next.score > best.score;
+  return tierCommonness(next.answer.tier) < tierCommonness(best.answer.tier);
+}
+
 export function matchAnswer(prompt: Prompt, raw: string): AnswerSpec | null {
   const key = normalize(raw);
   if (!key) return null;
-  const compact = key.replace(/ /g, "");
+  const compact = compactKey(key);
+
+  let best: { answer: AnswerSpec; rank: MatchRank; score: number } | null = null;
 
   for (const entry of prompt.answers) {
     for (const alias of keysOf(entry)) {
-      if (alias === key) return entry;
-      const aliasCompact = alias.replace(/ /g, "");
-      if (compact.length >= 4 && aliasCompact === compact) return entry;
-    }
-  }
+      const aliasCompact = compactKey(alias);
+      let rank: MatchRank | null = null;
+      let score = 0;
 
-  let best: { answer: AnswerSpec; distance: number } | null = null;
-  const tied = new Set<string>();
-  for (const entry of prompt.answers) {
-    for (const alias of keysOf(entry)) {
-      const aliasCompact = alias.replace(/ /g, "");
-      const hit =
+      if (alias === key) {
+        rank = 0;
+        score = 1;
+      } else if (compact.length >= 4 && aliasCompact === compact) {
+        rank = 1;
+        score = 1;
+      } else if (
+        substantialContainment(key, alias) ||
+        (compact.length >= 4 && substantialContainment(compact, aliasCompact))
+      ) {
+        rank = 2;
+        const shorter = Math.min(compact.length, aliasCompact.length);
+        const longer = Math.max(compact.length, aliasCompact.length) || 1;
+        score = shorter / longer;
+      } else if (
         closeEnough(key, alias) ||
-        (compact.length >= 4 && closeEnough(compact, aliasCompact));
-      if (!hit) continue;
-      const distance = Math.min(
-        levenshtein(key, alias),
-        compact && aliasCompact ? levenshtein(compact, aliasCompact) : 99,
-      );
-      if (!best || distance < best.distance) {
-        best = { answer: entry, distance };
-        tied.clear();
-        tied.add(entry.display);
-      } else if (distance === best.distance) {
-        tied.add(entry.display);
+        (compact.length >= 4 && closeEnough(compact, aliasCompact))
+      ) {
+        rank = 3;
+        const dist = Math.min(
+          levenshtein(key, alias),
+          compact && aliasCompact ? levenshtein(compact, aliasCompact) : 99,
+        );
+        const span = Math.max(compact.length, aliasCompact.length, key.length, alias.length, 1);
+        score = 1 - dist / span;
       }
+
+      if (rank === null) continue;
+      const next = { answer: entry, rank, score };
+      if (betterMatch(next, best)) best = next;
     }
   }
-  if (!best || tied.size > 1) return null;
-  return best.answer;
+
+  return best?.answer ?? null;
 }
 
 export function gradeMatch(entry: AnswerSpec): Grade {
