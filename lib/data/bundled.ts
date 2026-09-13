@@ -125,7 +125,13 @@ export async function loadBundled(): Promise<CompactPrompt[]> {
   const base = await inflateGzipBase64(BANK_CHUNKS.join(""));
   try {
     const { loadExtra } = await import("./extra-bundled");
-    return mergeCompact(base, await loadExtra());
+    const merged = mergeCompact(base, await loadExtra());
+    try {
+      const { loadExtra2 } = await import("./extra2-bundled");
+      return mergeCompact(merged, await loadExtra2());
+    } catch {
+      return merged;
+    }
   } catch {
     return base;
   }
