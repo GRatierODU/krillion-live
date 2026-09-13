@@ -316,7 +316,6 @@ export function KrillionGame({ prompts }: { prompts: Prompt[] }) {
       <Ocean
         depth={shownDepth}
         sinking={sinking && phase === "sink" && shownDepth > 2}
-        hidePlayer={phase === "sink"}
       />
       {inDive && <DepthRuler depth={shownDepth} />}
 
